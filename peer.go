@@ -60,7 +60,18 @@ func (p *Peer) Handshake() error {
 	}
 	p.nonce = nonce
 
-	msgVersion, err := wire.NewMsgVersionFromConn(p.conn, p.nonce, 0)
+	localAddr := &wire.NetAddress{
+		IP:   p.conn.LocalAddr().(*net.TCPAddr).IP,
+		Port: uint16(p.conn.LocalAddr().(*net.TCPAddr).Port),
+	}
+	remoteAddr := &wire.NetAddress{
+		IP:   p.conn.RemoteAddr().(*net.TCPAddr).IP,
+		Port: uint16(p.conn.RemoteAddr().(*net.TCPAddr).Port),
+	}
+	
+	msgVersion := wire.NewMsgVersion(localAddr, remoteAddr, p.nonce, 0)
+	
+	// msgVersion := wire.NewMsgVersion(p.conn.LocalAddr(), p.conn.RemoteAddr(), p.nonce, 0)
 	msgVersion.UserAgent = p.client.userAgent
 	msgVersion.DisableRelayTx = true
 	if err := p.WriteMessage(msgVersion); err != nil {
